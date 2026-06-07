@@ -29,6 +29,7 @@ int main(int argc, char const *argv[])
     {
         system("cls");
         std::cout << "Guess the word, it has " << randomWord.size() << " letters." << std::endl;
+        std::cout << "Name a letter." << std::endl;;
         std::cout << guess << std::endl;
         if (!errorMessage.empty())
         {
