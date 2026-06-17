@@ -1,0 +1,2 @@
+1. On older projects, i use system("cls"), but std::cout << "\033[2J\033[H"; works on all platforms, but it doesn't really clear the terminal.
+The ANSI escape sequence moves the cursor to the top-left
