@@ -26,7 +26,23 @@ Here are some of the programs you may find in this repository:
 
 ## How to Run
 
-1. Make sure you have a C++ compiler installed (like g++).
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/your-username/CPPProjects.git
+## Requirements
+- A C++ compiler (GCC, Clang, or MSVC)
+- Raylib (for graphical projects)
+How to Run
+- Clone the repository:
+```bash
+git clone https://github.com/your-username/CPPProjects.git
+```
+- Navigate to the project folder.
+- Compile the desired project.
+
+## Example for a console application:
+```bash
+g++ main.cpp -o program.exe
+```
+## Example for a Raylib project:
+```bash
+g++ main.cpp -o game.exe -lraylib -lopengl32 -lgdi32 -lwinmm
+```
+Run the executable.

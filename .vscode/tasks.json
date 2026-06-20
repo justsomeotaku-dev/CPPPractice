@@ -2,14 +2,22 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++.exe build active file",
-            "command": "C:\\Users\\miche\\Documents\\winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64msvcrt-13.0.0-r1\\mingw64\\bin\\g++.exe",
+            "label": "C/C++: g++.exe build active file (MSYS2)",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\bin\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\bin\\${fileBasenameNoExtension}.exe",
+                "-I",
+                "C:\\path\\to\\raylib\\include",
+                "-L",
+                "C:\\path\\to\\raylib\\lib",
+                "-lraylib",
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm"
             ],
             "options": {
                 "cwd": "${fileDirname}"
