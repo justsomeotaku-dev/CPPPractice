@@ -7,9 +7,9 @@
 
 const int W = 10;
 const int H = 10;
-char board[H][W];
-bool revealed[H][W];
-bool flagged[H][W];
+char board[W][H];
+bool revealed[W][H];
+bool flagged[W][H];
 
 void placeMines(int count)
 {
@@ -17,9 +17,9 @@ void placeMines(int count)
     {
         int x = rand() % W;
         int y = rand() % H;
-        if (board[y][x] == 'M')
+        if (board[x][y] == 'M')
             continue;
-        board[y][x] = 'M';
+        board[x][y] = 'M';
     }
 }
 
@@ -51,20 +51,20 @@ void draw()
         for (size_t x = 0; x < W; x++)
         {
 
-            if (!revealed[y][x])
+            if (!revealed[x][y])
             {
                 std::cout << "# ";
             }
             else
             {
-                if (board[y][x] == '0')
+                if (board[x][y] == '0')
                 {
                     std::cout << "  ";
                     
                 }
                 else
                 {
-                    std::cout << board[y][x] << " ";
+                    std::cout << board[x][y] << " ";
                 }
                 
             }
@@ -79,7 +79,7 @@ bool hasWon(int count)
     {
         for (size_t x = 0; x < W; x++)
         {
-            if (board[y][x] != 'M' && !revealed[y][x])
+            if (board[x][y] != 'M' && !revealed[x][y])
             {
                 return false;
             }
@@ -92,29 +92,28 @@ bool hasWon(int count)
 int countMines(int x, int y)
 {
     int mineCount = 0;
-    if (y - 1 >= 0 && x - 1 >= 0 && board[y - 1][x - 1] == 'M')
-        mineCount++;
-    if (y - 1 >= 0 && board[y - 1][x] == 'M')
-        mineCount++;
-    if (y - 1 >= 0 && x + 1 < W && board[y - 1][x + 1] == 'M')
-        mineCount++;
-    if (x - 1 >= 0 && y + 1 < H && board[y + 1][x - 1] == 'M')
-        mineCount++;
-    if (y + 1 < H && board[y + 1][x] == 'M')
-        mineCount++;
-    if (x + 1 < W && y + 1 < H && board[y + 1][x + 1] == 'M')
-        mineCount++;
-    if (x - 1 >= 0 && board[y][x - 1] == 'M')
-        mineCount++;
-    if (x + 1 < W && board[y][x + 1] == 'M')
-        mineCount++;
+    for (int dy = -1; dy <= 1; dy++)
+    {
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            if (dx == 0 && dy == 0) continue;
+            int nx = x+dx;
+            int ny = y+dy;
+            if (nx >= 0 && nx < W && ny >= 0 && ny < H)
+            {
+                if (board[nx][ny] == 'M') mineCount++;                
+            }
+            
+        }
+        
+    }
     return mineCount;
 }
 
 bool revealCell(int x, int y)
 {
-    revealed[y][x] = true;
-    if (board[y][x] == 'M')
+    revealed[x][y] = true;
+    if (board[x][y] == 'M')
     {
         return false;
     }
@@ -125,13 +124,13 @@ void floodFillCheck(int x, int y)
 {
     if (x < 0 || x >= W || y < 0 || y >= H)
         return;
-    if (revealed[y][x])
+    if (revealed[x][y])
         return;
-    if (board[y][x] == 'M')
+    if (board[x][y] == 'M')
         return;
     revealCell(x, y);
 
-    if (board[y][x] != '0')
+    if (board[x][y] != '0')
         return;
 
     for (int dy = -1; dy <= 1; dy++)
@@ -154,9 +153,9 @@ int main(int argc, char const *argv[])
     {
         for (size_t x = 0; x < W; x++)
         {
-            board[y][x] = '0';
-            revealed[y][x] = false;
-            flagged[y][x] = false;
+            board[x][y] = '0';
+            revealed[x][y] = false;
+            flagged[x][y] = false;
         }
     }
 
@@ -167,9 +166,9 @@ int main(int argc, char const *argv[])
     {
         for (size_t x = 0; x < W; x++)
         {
-            if (board[y][x] != 'M')
+            if (board[x][y] != 'M')
             {
-                board[y][x] = '0' + countMines(x, y);
+                board[x][y] = '0' + countMines(x, y);
             }
         }
     }
@@ -188,7 +187,7 @@ int main(int argc, char const *argv[])
         std::cout << "Give coordinates in X Y format." << std::endl;
         std::getline(std::cin, coordinates);
         std::stringstream ss(coordinates);
-        if (ss >> x >> y && !revealed[y][x])
+        if (ss >> x >> y && !revealed[x][y])
         {
             if (!revealCell(x, y))
             {

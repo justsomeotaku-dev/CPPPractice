@@ -7,12 +7,7 @@ const int gridSize = 3;
 const int cellSize = screenWidth / gridSize;
 const int topPadding = 100;
 
-enum class Cell
-{
-    E,
-    X,
-    O
-}; // class that can either be E(MPTY), X or O
+enum class Cell {E,X,O}; // class that can either be E(MPTY), X or O
 
 Cell board[gridSize][gridSize];
 Cell currentPlayer = Cell::X;
@@ -49,7 +44,7 @@ Cell CheckWinner()
         && board[1][1] == board[2][2])
         return board[0][0];
     if (board[2][0] != Cell::E 
-        && board[0][0] == board[1][1] 
+        && board[2][0] == board[1][1] 
         && board[1][1] == board[0][2])
         return board[2][0];
     return Cell::E;
@@ -109,7 +104,7 @@ std::string toString(Cell c)
     return "";
 }
 
-void draw()
+void Draw()
 {
     std::string text;
     Color color = MAROON;
@@ -183,7 +178,7 @@ int main(int argc, char const *argv[])
 
         BeginDrawing();
         ClearBackground(WHITE);
-        draw();
+        Draw();
 
         EndDrawing();
     }
