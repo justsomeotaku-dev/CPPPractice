@@ -8,6 +8,7 @@ const int screenWidth = 600;
 const int screenHeight = 600;
 
 const int gridSize = 10;
+const int mines = 10;
 const int cellSize = screenWidth / gridSize;
 int clicks = 0;
 
@@ -114,7 +115,7 @@ void handleInput()
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !(flagged[x][y]))
     {
         if (clicks == 0 && board[x][y] == 'M'){
-            reset(10);
+            reset(mines);
             handleInput();
             return;
         }
@@ -257,7 +258,7 @@ int main(int argc, char const *argv[])
     std::srand(time(nullptr));
     InitWindow(screenWidth, screenHeight, "Minesweeper");
     SetTargetFPS(60);
-    reset(10);
+    reset(mines);
 
     while (!WindowShouldClose())
     {
