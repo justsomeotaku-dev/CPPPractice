@@ -1,45 +1,108 @@
 #include "raylib.h"
 #include <cmath>
 #include <vector>
+#include <cstdlib>
+#include <ctime>
 
-struct Ship{
+struct Ship
+{
     Vector2 position;
     Vector2 velocity;
     float rotation;
 };
 
-struct Bullet{
+struct Bullet
+{
     Vector2 position;
     Vector2 velocity;
-    float rotation;
     float lifeTime;
 };
 
+struct Asteroid
+{
+    Vector2 position;
+    Vector2 velocity;
+};
+
+std::vector<Asteroid> asteroids;
 std::vector<Bullet> bullets;
 float elapsedTime = 0.0f;
+float asteroidTimer = 0.0f;
 
 // rotation formula
-Vector2 rotatePoint(Vector2 vector, float rotation){
+Vector2 rotatePoint(Vector2 vector, float rotation)
+{
     return {
         vector.x * cosf(rotation) - vector.y * sinf(rotation),
-        vector.x * sinf(rotation) + vector.y * cosf(rotation)
+        vector.x * sinf(rotation) + vector.y * cosf(rotation)};
+}
+
+void CheckWraparound(Vector2& position, int screenWidth, int screenHeight){
+    if (position.x < 0)
+        position.x = screenWidth;
+    if (position.y < 0)
+        position.y = screenHeight;
+    if (position.x > screenWidth)
+        position.x = 0;
+    if (position.y > screenHeight)
+        position.y = 0;
+}
+
+bool CircleCollision(Vector2 p1, float r1, Vector2 p2, float r2){
+    return;
+}
+
+Asteroid SpawnAsteroid(int screenWidth, int screenHeight)
+{
+    Asteroid a;
+    int side = rand() % 4; // 0-3
+    float angle = 0.0f;
+    switch (side)
+    {
+    case 0: // Top
+        a.position = {(float)(rand()%screenWidth),0.0f};
+        angle = (float)PI/2.0f;
+        break;
+    case 1: // Right
+        a.position = {(float)(screenWidth),(float)(rand()%screenHeight)};
+        angle = (float)PI;
+        break;
+    case 2: // Bottom
+        a.position = {(float)(rand()%screenWidth),(float)screenHeight};
+        angle = ((float)PI*3.0f)/2.0f;
+        break;
+    case 3: // Left
+        a.position = {0.0f,(float)(rand()%screenHeight)};
+        angle = 0.0f;
+        break;
+    }
+
+    float spread = (((float)rand()/(float)RAND_MAX)*0.5)*(PI/3); //0.5 centered around 0, pi/3 = 60% = +-30%
+    angle += spread;
+    float speed = 2.0f;
+    
+    a.velocity = {
+        cosf(angle) * speed,
+        sinf(angle) * speed
     };
+
+    return a;
 }
 
 int main(int argc, char const *argv[])
 {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
+    srand(time(nullptr));
 
     Ship ship{
-        {200,200},
-        {0,0},
-        0.0f
-    };
+        {200, 200},
+        {0, 0},
+        0.0f};
 
     // local coordiantes of the 3 points
-    Vector2 localFront = {0,-40};
-    Vector2 localLeft = {-20,20};
-    Vector2 localRight = {20,20};
+    Vector2 localFront = {0, -40};
+    Vector2 localLeft = {-20, 20};
+    Vector2 localRight = {20, 20};
 
     const int screenWidth = 800;
     const int screenHeight = 800;
@@ -50,77 +113,104 @@ int main(int argc, char const *argv[])
     while (!WindowShouldClose())
     {
         // calculates the position of the 3 points using the rotation formula, ship rotation and adds the norm of the ship position
+        Vector2 rotatedLocalFront = rotatePoint(localFront, ship.rotation);
         Vector2 front = {
-        rotatePoint(localFront, ship.rotation).x + ship.position.x,
-        rotatePoint(localFront, ship.rotation).y + ship.position.y,
+            rotatedLocalFront.x + ship.position.x,
+            rotatedLocalFront.y + ship.position.y,
         };
+
+        Vector2 rotatedLocalLeft = rotatePoint(localLeft, ship.rotation);
         Vector2 left = {
-            rotatePoint(localLeft, ship.rotation).x + ship.position.x,
-            rotatePoint(localLeft, ship.rotation).y + ship.position.y,
+            rotatedLocalLeft.x + ship.position.x,
+            rotatedLocalLeft.y + ship.position.y,
         };
+
+        Vector2 rotatedLocalRight = rotatePoint(localRight, ship.rotation);
         Vector2 right = {
-            rotatePoint(localRight, ship.rotation).x + ship.position.x,
-            rotatePoint(localRight, ship.rotation).y + ship.position.y,
+            rotatedLocalRight.x + ship.position.x,
+            rotatedLocalRight.y + ship.position.y,
         };
 
         // checks input
-
-        if (IsKeyDown(KEY_RIGHT)) ship.rotation += 0.1f;
-        if (IsKeyDown(KEY_LEFT)) ship.rotation -= 0.1f;
+        if (IsKeyDown(KEY_RIGHT))
+            ship.rotation += 0.1f;
+        if (IsKeyDown(KEY_LEFT))
+            ship.rotation -= 0.1f;
 
         // takes a new vector: cos 0 sin 1, which points up, then rotates it so value 0-1
-        Vector2 forward = rotatePoint({0,-1},ship.rotation);
-        if (IsKeyDown(KEY_UP)){
+        Vector2 forward = rotatePoint({0, -1}, ship.rotation);
+        if (IsKeyDown(KEY_UP))
+        {
             ship.velocity.x += forward.x * 0.1f;
             ship.velocity.y += forward.y * 0.1f;
-        } 
+        }
 
-        if (IsKeyPressed(KEY_SPACE) && bullets.size() < 4){
+        if (IsKeyPressed(KEY_SPACE) && bullets.size() < 4)
+        {
+            Vector2 forwardB = rotatePoint({0, -1}, ship.rotation);
             bullets.push_back(Bullet{
-                {front.x,front.y},
-                {0,0},
-                {ship.rotation}
-            });
+                {front.x, front.y},
+                {forwardB.x * 5.0f, forwardB.y * 5.0f},
+                0.0f});
+        }
+
+        asteroidTimer+=GetFrameTime();
+        if (asteroidTimer >= 2.0f)
+        { 
+            asteroids.push_back(SpawnAsteroid(screenWidth,screenHeight));
+            asteroidTimer = 0.0f;
         }
 
         // adds the velocity to the position, but 0.98 to avoid infinite velocity
-        ship.velocity.x *= 0.98f;
-        ship.velocity.y *= 0.98f;
+        ship.velocity.x *= 0.985f;
+        ship.velocity.y *= 0.985f;
         ship.position.x += ship.velocity.x;
         ship.position.y += ship.velocity.y;
 
         // basic screen wraparound logic
-        if (ship.position.x < 0) ship.position.x = screenWidth;
-        if (ship.position.y < 0) ship.position.y = screenHeight;
-        if (ship.position.x > screenWidth) ship.position.x = 0;
-        if (ship.position.y > screenHeight) ship.position.y = 0;
+        CheckWraparound(ship.position, screenWidth, screenHeight);
 
-        for (Bullet& b : bullets){
-                Vector2 forwardB = rotatePoint({0,-1},b.rotation);
-                b.velocity.x = forwardB.x * 5.0f;
-                b.velocity.y = forwardB.y * 5.0f;
-                b.position.x += b.velocity.x;
-                b.position.y += b.velocity.y;
+        // when you need to add, modify, or remove elements during iteration, iterate in reverse, or skip elements,
+        // you should use iterators
+        for (auto it = bullets.begin(); it != bullets.end();)
+        {
+            it->position.x += it->velocity.x;
+            it->position.y += it->velocity.y;
 
-                if(b.lifeTime >= 1.0f){
-                    bullets.erase(bullets.begin());
-                }
+            CheckWraparound(it->position,screenWidth,screenHeight);
+
+            it->lifeTime += GetFrameTime();
+            if (it->lifeTime >= 1.0f)
+                it = bullets.erase(it);
+            else
+                ++it;
+        }
+
+        for (Asteroid &a : asteroids)
+        {
+            a.position.x += a.velocity.x;
+            a.position.y += a.velocity.y;
         }
 
         BeginDrawing();
-            ClearBackground(WHITE);
-            // drawing the ship manually, since DrawTriangleLines doesn't have a thickness
-            DrawLineEx(front, left, 4, BLACK); 
-            DrawLineEx(left, right, 4, BLACK);
-            DrawLineEx(right, front, 4, BLACK);
+        ClearBackground(WHITE);
+        // drawing the ship manually, since DrawTriangleLines doesn't have a thickness
+        DrawLineEx(front, left, 4, BLACK);
+        DrawLineEx(left, right, 4, BLACK);
+        DrawLineEx(right, front, 4, BLACK);
 
-            // bullets
-            for (Bullet& b : bullets){
-                DrawCircleV(b.position,3.0f, BLACK);
-                b.lifeTime += GetFrameTime();
-            }
-            elapsedTime += GetFrameTime();
-            DrawText(TextFormat("Time Elapsed: %0.2f",elapsedTime),20,20,20,LIGHTGRAY);
+        // bullets
+        for (Bullet &b : bullets)
+        {
+            DrawCircleV(b.position, 3.0f, BLACK);
+        }
+        // asteroids
+        for (Asteroid &a : asteroids)
+        {
+            DrawCircleV(a.position, 50.0f, BLACK);
+        }
+        elapsedTime += GetFrameTime();
+        DrawText(TextFormat("Time Elapsed: %0.2f", elapsedTime), 20, 20, 20, LIGHTGRAY);
         EndDrawing();
     }
 
